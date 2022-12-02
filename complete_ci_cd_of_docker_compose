@@ -1,0 +1,60 @@
+pipeline {
+   agent {
+     node {
+	   label 'built-in'
+	   customWorkspace '/mnt/'
+	  }
+	 }
+	environment {
+       PATH="/mnt/build-tool/apache-maven-3.8.6/bin:$PATH"
+	  }
+	 
+	 stages {
+	 stage(git){
+	 steps{
+	 dir ('/mnt/project/'){
+	 sh "rm -rf *"
+	 sh "git clone https://github.com/ankeshgawai1997/game-of-life.git"
+	       }
+	      }
+	     }
+	 stage(complie){
+	   steps{
+	   dir ('/mnt/project/game-of-life/'){
+	     sh "mvn install"
+	       }
+	      }
+	    }
+		 stage(copytoslave){
+		 steps{
+		  sh "scp -i 'oregon_key.pem' /mnt/project/game-of-life/gameoflife-web/target/gameoflife.war ec2-user@172.31.11.10:/home/ec2-user/"
+		  }
+		 }
+	   stage(slave){
+	     agent{
+		   node{
+		     label "172.31.11.10-B"
+		   }
+		 }
+		 steps{
+		 sh "rm -rf *"
+		 sh "git clone https://github.com/ankeshgawai1997/docker-compose.git"
+		 }
+	   }
+		stage(dckr){
+		 agent {
+		   node {
+		     label "172.31.11.10-B"
+		   }
+		 }
+		steps{
+			dir ('/home/ec2-user/workspace/docker-project-2/docker-compose/'){
+			 sh "sudo docker-compose up -d"
+			 sh "sudo docker stop docker-compose_service_one_1"
+			 sh "sudo docker rm docker-compose_service_one_1"
+			 sh "sudo docker-compose up -d"
+			}
+		  }
+	   }
+	 }
+  }
