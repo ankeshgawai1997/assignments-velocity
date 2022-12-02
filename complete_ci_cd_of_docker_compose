@@ -52,6 +52,8 @@ pipeline {
 			 sh "sudo docker-compose up -d"
 			 sh "sudo docker stop docker-compose_service_one_1"
 			 sh "sudo docker rm docker-compose_service_one_1"
+			 sh "sudo docker stop docker-compose_service_two_1"
+			 sh "sudo docker rm  docker-compose_service_two_1"
 			 sh "sudo docker-compose up -d"
 			}
 		  }
